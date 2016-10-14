@@ -46,6 +46,7 @@ job "scdf-deployer" {
 			env {
 				JAVA_OPTS = "-Xmx128m" # see spring-cloud-dataflow-server-nomad/pom.xml:84
 				spring.cloud.deployer.nomad.nomadHost = "nomad-client"
+				spring.cloud.deployer.nomad.resourcesMemory = "256"
 			}
 
 			resources {
