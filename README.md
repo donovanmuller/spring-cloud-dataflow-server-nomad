@@ -1,6 +1,6 @@
 # Spring Cloud Data Flow Server Nomad
 
-This project provides support for deploying Spring Cloud Dataflow's streaming and task/batch data pipelines to [Hashicorp Nomad](). 
+This project provides support for deploying Spring Cloud Dataflow's streaming and task/batch data pipelines to [Hashicorp Nomad](https://www.nomadproject.io). 
 It includes an implementation of Spring Cloud Data Flow’s [Deployer SPI for Nomad](https://github.com/donovanmuller/spring-cloud-deployer-nomad).
 
 This implementation borrows heavily from the [spring-cloud-dataflow-server-kubernetes](https://github.com/spring-cloud/spring-cloud-dataflow-server-kubernetes)
@@ -140,13 +140,6 @@ Using the Spring Cloud Data Flow Shell, you can target the server with:
 $ wget http://repo.spring.io/release/org/springframework/cloud/spring-cloud-dataflow-shell/1.0.1.RELEASE/spring-cloud-dataflow-shell-1.0.1.RELEASE.jar
 ...
 $ java -jar spring-cloud-dataflow-shell-1.0.1.RELEASE.jar \
-  --dataflow.uri=scdf-server.hashistack.vagrant
+  --dataflow.uri=http://scdf-server.hashistack.vagrant
 ...
 ```
-
-
-
-
-
-
-
