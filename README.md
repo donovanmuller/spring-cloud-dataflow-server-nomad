@@ -140,7 +140,7 @@ Using the Spring Cloud Data Flow Shell, you can target the server with:
 $ wget http://repo.spring.io/release/org/springframework/cloud/spring-cloud-dataflow-shell/1.0.1.RELEASE/spring-cloud-dataflow-shell-1.0.1.RELEASE.jar
 ...
 $ java -jar spring-cloud-dataflow-shell-1.0.1.RELEASE.jar \
-  --dataflow.uri=http://scdf-server.vagrant.nomad
+  --dataflow.uri=scdf-server.hashistack.vagrant
 ...
 ```
 
