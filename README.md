@@ -64,7 +64,7 @@ and then, in a SSH session (`vagrant ssh`) on the Hashistack VM, run the job wit
 
 ```bash
 $ pwd
-<hashistack-vagrant location> # should be he directory of the hashistack-vagrant cloned project
+<hashistack-vagrant location> # should be the directory of the hashistack-vagrant cloned project
 $ vagrant ssh
 ...
 vagrant@hashistack:~$ nomad run /vagrant/kafka.nomad
@@ -117,7 +117,7 @@ and then, in a SSH session (`vagrant ssh`) on the Hashistack VM, run the job wit
 
 ```bash
 $ pwd
-<hashistack-vagrant location> # should be he directory of the hashistack-vagrant cloned project
+<hashistack-vagrant location> # should be the directory of the hashistack-vagrant cloned project
 $ vagrant ssh
 ...
 vagrant@hashistack:~$ nomad run /vagrant/scdf-deployer.nomad
@@ -151,79 +151,5 @@ The `hashistack-vagrant` VM is configured by default with `2048 MB` of memory an
 If you run into issues with job allocations failing because of resource starvation, you can tweak the
 memory and CPU configuration in the `Vagrantfile`.
 
-##### A conundrum
-
-> In context of using the [Docker task driver](https://www.nomadproject.io/docs/drivers/docker.html)
-and using the starter apps Docker images (e.g. [kafka-docker apps](http://bit.ly/1-0-4-GA-stream-applications-kafka-docker)).
-
-A Nomad job definition must include [resource](https://www.nomadproject.io/docs/jobspec/index.html#resources)
-specifications. The Nomad deployer uses a default of `512 MB` (see [here](https://github.com/donovanmuller/spring-cloud-deployer-nomad/blob/master/src/main/java/org/springframework/cloud/deployer/spi/nomad/NomadDeployerProperties.java#L101))
-and while that may seem excessive (and it is), if you want to deploy
-quite a few streams/tasks you might want to tweak the VM memory settings to accommodate the amount of apps, to say `8192 MB`. 
-However, with that comes a tricky problem...
-
-When you increase the VM memory and configure a lower `spring.cloud.deployer.nomad.resourcesMemory` setting
-for the deployed apps, say `256 MB`, you will notice that your apps (at least the starter apps) will struggle to start
-due to hitting memory limits on the JVM.
-
-At first blush this doesn't make sense because `256 MB` should be more than enough for a starter app to startup in, especially
-starter apps like the [`log-sink`](https://github.com/spring-cloud/spring-cloud-stream-app-starters/tree/master/log/spring-cloud-starter-stream-sink-log).
-The problem is this: the Docker container has a memory resource limit of `256 MB` (which is what `spring.cloud.deployer.nomad.resourcesMemory` relates too) but the Java JVM
-without `-Xms` or `-Xmx` settings defaults to choosing default heap sizes (see http://stackoverflow.com/a/40025912/2408961) based on the machines memory.
-You would assume that the JVM would take the Docker containers memory (`256 MB`) and calculate the defaults but
-it does not, it takes the *host machine's* (hashistack VM's) memory value (`2048 MB`) instead.
-With a high value like `2048 MB`, the default heap sizes could be 1/64 - 1/2 of that, so something like `32` / `1024`
-depending on the JVM. These heap sizes then push the boundary of the actual Docker container memory limits
-and your app ends up halting during startup and never actually becomes healthy, resulting in
-a kill/start loop as Nomad tries to restart your app in vain.
-
-Unfortunately, the starter apps do not [*currently*](https://github.com/spring-cloud/spring-cloud-stream-app-maven-plugin/issues/10)
-support passing `JAVA_OPTS` which would allow the deployer to set `-Xms`/`-Xmx`. Therefore, you need to think carfefully if you're planning to deploy
-a few streams or tasks because the higher you push the VM memory, the higher you need to push the
-`spring.cloud.deployer.nomad.resourcesMemory` value to counteract the above issue.
-
-As an example, the [HTTP Source](https://github.com/spring-cloud/spring-cloud-stream-app-starters/tree/master/http/spring-cloud-starter-stream-source-http)
-starter app deployed into the hashistack VM with `2048 MB` of system memory
-and a `spring.cloud.deployer.nomad.resourcesMemory` value of `256` for the app, shows the following metrics ([/metrics](http://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-metrics.html#production-ready-metrics)):
-
-```
-{
-    mem: 282087,
-    mem.free: 121287,
-    processors: 2,
-    instance.uptime: 2425860,
-    uptime: 2442986,
-    systemload.average: 1.56,
-    heap.committed: 209408,
-    heap.init: 32768,
-    heap.used: 88120,
-    heap: 457216,
-    nonheap.committed: 73816,
-    nonheap.init: 2496,
-    nonheap.used: 72680,
-    nonheap: 0,
-    ...
-```
-
-Note that the total memory (`mem`) is registered as `282087 KB` or around `275 MB` which is correct for the
-container limited memory resources. However, the `heap` value (`-Xmx`) is `457216 KB` or around `446 MB`.
-I.e total VM memory (`2048`) / 4 = `512`, our calculated `-Xmx`. Similarly, the `heap.init` value of
-`32768 KB` or `32 MB` which is total VM memory (`2048`) / 64 = `32`, our calculated `-Xms`. Luckily our JVM is not
-using more than `256 MB` of heap or we would see it hitting up against the container memory limit.
-
-So the higher the VM system memory, the higher the calculated `-Xms`/`-Xmx` becomes and in turn, the higher you have to 
-push the container memory resource with `spring.cloud.deployer.nomad.resourcesMemory`.
-Luckily, there is an issue open for allowing `JAVA_OPTS` to be set in the starter app Docker images ([spring-cloud-stream-app-maven-plugin#10](https://github.com/spring-cloud/spring-cloud-stream-app-maven-plugin/issues/10)).
-So when that issue is resolved, this shouldn't be such an issue.
- 
-> See this article for more information: http://matthewkwilliams.com/index.php/2016/03/17/docker-cgroups-memory-constraints-and-java-cautionary-tale/
-
-##### A default compromise
-
-The standalone command (above) and the `scdf-deployer.nomad` job definition suggest a value of `spring.cloud.deployer.nomad.resourcesMemory=256`, which is a compromise between not hogging
-to much memory resources from a Nomad perspective but also not to small for the app to run out of heap space.
-
-
-
-
-
+Please see the [Resource Allocations](https://github.com/donovanmuller/spring-cloud-dataflow-server-nomad/wiki/Resource-Allocations)
+section in the Wiki for more information.
