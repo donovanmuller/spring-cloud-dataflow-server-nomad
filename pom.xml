@@ -7,13 +7,13 @@
     <parent>
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-dataflow-parent</artifactId>
-        <version>1.1.0.M1</version>
-        <relativePath />  <!-- lookup parent from repository -->
+        <version>1.1.0.RELEASE</version>
+        <relativePath />
     </parent>
 
     <groupId>org.springframework.cloud</groupId>
     <artifactId>spring-cloud-dataflow-server-nomad-parent</artifactId>
-    <version>1.0.0.BUILD-SNAPSHOT</version>
+    <version>1.1.0.BUILD-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -22,8 +22,8 @@
     </modules>
 
     <properties>
-        <spring-cloud-dataflow.version>1.1.0.M1</spring-cloud-dataflow.version>
-        <spring-cloud-deployer-nomad.version>1.0.0.BUILD-SNAPSHOT</spring-cloud-deployer-nomad.version>
+        <spring-cloud-dataflow.version>1.1.0.RELEASE</spring-cloud-dataflow.version>
+        <spring-cloud-deployer-nomad.version>1.1.0.BUILD-SNAPSHOT</spring-cloud-deployer-nomad.version>
     </properties>
 
     <dependencyManagement>
@@ -40,22 +40,6 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>animal-sniffer-maven-plugin</artifactId>
-				<configuration>
-					<signature>
-						<groupId>org.codehaus.mojo.signature</groupId>
-						<artifactId>java18</artifactId>
-						<version>1.0</version>
-					</signature>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
 
     <profiles>
         <profile>

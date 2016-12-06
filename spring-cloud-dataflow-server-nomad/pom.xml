@@ -7,12 +7,11 @@
     <parent>
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-dataflow-server-nomad-parent</artifactId>
-        <version>1.0.0.BUILD-SNAPSHOT</version>
+        <version>1.1.0.BUILD-SNAPSHOT</version>
     </parent>
 
     <groupId>org.springframework.cloud</groupId>
     <artifactId>spring-cloud-dataflow-server-nomad</artifactId>
-    <version>1.0.0.BUILD-SNAPSHOT</version>
 
     <properties>
         <start-class>org.springframework.cloud.dataflow.server.nomad.NomadDataFlowServer</start-class>
@@ -22,7 +21,7 @@
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-dataflow-server-nomad</artifactId>
-            <version>1.0.0.BUILD-SNAPSHOT</version>
+            <version>1.1.0.BUILD-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.mariadb.jdbc</groupId>
@@ -85,7 +84,7 @@
                                     <volume>/tmp</volume>
                                 </volumes>
                                 <entryPoint>
-                                    java $JAVA_OPTS -Djava.security.egd=file:/dev/urandom -jar /maven/spring-cloud-dataflow-server-nomad.jar
+                                    exec java $JAVA_OPTS -Djava.security.egd=file:/dev/urandom -jar /maven/spring-cloud-dataflow-server-nomad.jar
                                 </entryPoint>
                                 <assembly>
                                     <descriptor>assembly.xml</descriptor>
