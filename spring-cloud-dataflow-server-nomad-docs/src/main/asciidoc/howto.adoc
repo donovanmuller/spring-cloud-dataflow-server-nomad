@@ -1,0 +1,200 @@
+[[howto]]
+= '`How-to`' guides
+
+[partintro]
+--
+This section provides answers to some common '`how do I do that...`' type of questions
+that often arise when using Spring Cloud Data Flow.
+--
+
+== Deploying Custom Stream App as a Maven Resource
+
+This section walks you through deploying a simple Spring Cloud Stream based application, packaged as a Maven artifact, with Nomad.
+The source code for this app is available in the following https://github.com/donovanmuller/timezone-processor-kafka[GitHub repository].
+
+This guide assumes that you have gone through the <<getting-started>> section and are using a local https://github.com/donovanmuller/hashistack-vagrant[hashistack-vagrant] environment.
+Adjust the steps accordingly if you are using an existing Nomad cluster.
+
+=== Deploy a Nexus Repository
+
+For Nomad to deploy the Maven artifact, it must be able to resolve and download the custom app's Jar artifact.
+This means that the custom app must be deployed to an accessible Maven repository.
+
+We will deploy a Nexus job specification to which we can deploy our custom application.
+Deploying the Nexus image is trivial thanks to
+a provided Nexus job specification https://github.com/donovanmuller/spring-cloud-dataflow-server-nomad/tree/{scdf-server-nomad-version}/src/etc/nomad/nexus.nomad[available here].
+
+Using `nomad`, run the Nexus job with:
+
+[subs="attributes"]
+[source,console]
+----
+vagrant@hashistack:~$ nomad run https://raw.githubusercontent.com/donovanmuller/spring-cloud-dataflow-server-nomad/{scdf-server-nomad-version}/src/etc/nomad/nexus.nomad
+...
+----
+
+[NOTE]
+====
+If you are using a local `nomad` binary you can reference the remote `scdf.nomad` file directly.
+
+[subs="attributes"]
+[source,console]
+----
+$ nomad run --address=http://172.16.0.2:4646 https://raw.githubusercontent.com/donovanmuller/spring-cloud-dataflow-server-nomad/{scdf-server-nomad-version}/src/etc/nomad/nexus.nomad
+...
+----
+====
+
+Wait for the Nexus image to be pulled and the deployment to be successful. Once the task is successfully running
+you should be able to access the Nexus UI at http://nexus.hashistack.vagrant.
+
+TIP: The default credential for Nexus is `admin`/`admin123` or `deployment`/`deployment123`
+
+=== Configuring the Data Flow Server for Nomad
+
+We need to configure the Data Flow Server to use this new Nexus instance as a remote Maven repository.
+If you have an existing deployment from the <<getting-started>> section you will have to change it's configuration.
+
+You could edit the `scdf.nomad` job specification and rerun the job but possibly the easiest way to
+include the Nexus configuration is to remove the existing `scdf` job and run the https://github.com/donovanmuller/spring-cloud-dataflow-server-nomad/tree/{scdf-server-nomad-version}/src/etc/nomad/scdf-with-nexus.nomad[scdf-with-nexus.nomad]
+job specification.
+
+[subs="attributes"]
+[source,console]
+----
+vagrant@hashistack:~$ nomad stop scdf
+...
+vagrant@hashistack:~$ nomad run https://github.com/donovanmuller/spring-cloud-dataflow-server-nomad/tree/{scdf-server-nomad-version}/src/etc/nomad/scdf-with-nexus.nomad
+...
+----
+
+Wait for the job and all tasks to be in a running state.
+You can verify that everything including Nexus has been started by checking Consul:
+
+image::{scdf-server-nomad-asciidoc}/images/scdf-nomad-with-nexus.png[nexus]
+
+=== Cloning and Deploying the App
+
+Next step is to deploy our custom app into the Nexus instance.
+First though, we need to clone the custom app source.
+
+[source,console]
+----
+$ git clone https://github.com/donovanmuller/timezone-processor-kafka.git
+$ cd timezone-processor-kafka
+----
+
+Next we deploy the application into our Nexus repository with
+
+[source,console]
+----
+$ ./mvnw -s .settings.xml deploy -Dnexus.url=http://nexus.hashistack.vagrant/content/repositories/snapshots
+...
+Uploading: http://nexus.hashistack.vagrant/content/repositories/snapshots/io/switchbit/timezone-processor-kafka/maven-metadata.xml
+Uploaded: http://nexus.hashistack.vagrant/content/repositories/snapshots/io/switchbit/timezone-processor-kafka/maven-metadata.xml (294 B at 9.3 KB/sec)
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 11.171 s
+[INFO] Finished at: 2016-12-13T15:39:43+02:00
+[INFO] Final Memory: 25M/326M
+[INFO] ------------------------------------------------------------------------
+----
+
+IMPORTANT: Substitute the value for `-Dnexus.url` with the URL matching your Nexus instance.
+
+=== Deploying the Stream
+
+Now that our custom app is ready, let's register it with the Data Flow Server.
+Using the Data Flow Shell, targeted to our Nomad instance, register the `timezone` app with:
+
+[source,console]
+----
+dataflow:>app register --name timezone --type processor --uri maven://io.switchbit:timezone-processor-kafka:1.0-SNAPSHOT
+Successfully registered application 'processor:timezone'
+----
+
+[NOTE]
+====
+The assumption is that the out-of-the-box apps have been imported previously as part of the <<getting-started>> section.
+If the apps are not imported, import them now with:
+
+[source,console]
+----
+dataflow:>app import --uri http://bit.ly/stream-applications-kafka-docker
+----
+
+It does not really matter whether the Docker or Maven out-of-the-box apps are registered.
+====
+
+Now we can define a stream using our timezone processor with:
+
+[source,console]
+----
+dataflow:>stream create --name timezoney --definition "time | timezone | log"
+Created new stream 'timezoney'
+----
+
+and deploy it with:
+
+[source,console]
+----
+dataflow:>stream deploy timezoney --properties "app.timezone.timezone=Africa/Johannesburg"
+Deployment request has been sent for stream 'timezoney'
+----
+
+NOTE: The provided deployment property (`app.timezone.timezone=Africa/Johannesburg`) is the required timezone to convert the input times too.
+
+Check the jobs created with:
+
+[source,console]
+----
+vagrant@hashistack:~$ nomad status
+ID                  Type     Priority  Status
+nexus               service  50        running
+scdf-nexus          service  50        running
+timezoney-log       service  50        running
+timezoney-time      service  50        running
+timezoney-timezone  service  50        running
+----
+
+or check the Consul health checks for the `timezoney-*` stream apps:
+
+image::{scdf-server-nomad-asciidoc}/images/scdf-nomad-timezoney-deployed.png[timezoney stream deployed]
+
+View both the `timezoney-timezone-0` and `timezoney-log-0` apps for the expected log outputs.
+
+[source,console]
+----
+vagrant@hashistack:~$ nomad logs -f 35c70aec
+...
+...  INFO 17275 --- [afka-consumer-1] o.s.c.s.b.k.KafkaMessageChannelBinder$1  : partitions revoked:[timezoney.time-0]
+...  INFO 17275 --- [afka-consumer-1] o.s.c.s.b.k.KafkaMessageChannelBinder$1  : partitions assigned:[timezoney.time-0]
+...  INFO 17275 --- [afka-listener-2] io.switchbit.TimezoneProcessor           : Converting time '12/13/16 20:01:29' to timezone: 'Africa/Johannesburg'
+...  INFO 17275 --- [afka-listener-2] io.switchbit.TimezoneProcessor           : Converting time '12/13/16 20:01:30' to timezone: 'Africa/Johannesburg'
+...  INFO 17275 --- [afka-listener-2] io.switchbit.TimezoneProcessor           : Converting time '12/13/16 20:01:31' to timezone: 'Africa/Johannesburg'
+...  INFO 17275 --- [afka-listener-2] io.switchbit.TimezoneProcessor           : Converting time '12/13/16 20:01:32' to timezone: 'Africa/Johannesburg'
+...  INFO 17275 --- [afka-listener-2] io.switchbit.TimezoneProcessor           : Converting time '12/13/16 20:01:33' to timezone: 'Africa/Johannesburg'
+
+vagrant@hashistack:~$ nomad logs -f 047ef240
+...
+...  INFO 1 --- [afka-listener-1] log-sink                                 : 12/13/16 22:03:17
+...  INFO 1 --- [afka-listener-1] log-sink                                 : 12/13/16 22:03:18
+...  INFO 1 --- [afka-listener-1] log-sink                                 : 12/13/16 22:03:19
+...  INFO 1 --- [afka-listener-1] log-sink                                 : 12/13/16 22:03:20
+...  INFO 1 --- [afka-listener-1] log-sink                                 : 12/13/16 22:03:21
+----
+
+Once you're done, destroy the stream with:
+
+[source,console]
+----
+dataflow:>stream destroy timezoney
+Destroyed stream 'timezoney'
+----
+
+
+
+
+
+

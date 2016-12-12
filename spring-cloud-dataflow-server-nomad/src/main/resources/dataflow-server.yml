@@ -24,8 +24,10 @@ spring:
   cloud:
     deployer:
       nomad:
-        createLoadBalancer: false
-        environmentVariables: 'SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS=kafka:9092,SPRING_CLOUD_STREAM_KAFKA_BINDER_ZK_NODES=zookeeper:2181'
+        environmentVariables: >
+          SPRING_CLOUD_STREAM_KAFKA_BINDER_BROKERS=kafka-broker.service.consul:9092,
+          SPRING_CLOUD_STREAM_KAFKA_BINDER_ZK_NODES=kafka-zk.service.consul:2181,
+          SPRING_CLOUD_CONSUL_HOST=consul.service.consul
 
 # Configuration options when using RabbitMQ binder:
 #spring:

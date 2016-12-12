@@ -1,0 +1,130 @@
+[[server]]
+= Server Implementation
+
+== Server Properties
+
+The following properties can be used to configure the Data Flow Nomad Server.
+
+|===
+|Name |Usage Example |Description
+
+|API Hostname/IP
+|`spring.cloud.deployer.nomad.nomadHost=nomad-client.cluster.com`
+|The hostname/IP address where a Nomad client is listening. Default is `localhost`
+
+|API Port
+|`spring.cloud.deployer.nomad.nomadPort=14646`
+|The port where a Nomad client is listening. Default is `4646`
+
+|Region
+|`spring.cloud.deployer.nomad.region=eu-west`
+|The region to deploy apps into. Default to `global`. See https://www.nomadproject.io/docs/jobspec/json.html#Region[here]
+
+|Datacenters
+|`spring.cloud.deployer.nomad.datacenters=dc1,dc2`
+|A comma separated list of datacenters that should be targeted for deployment. Default value is `dc1`. See https://www.nomadproject.io/docs/jobspec/json.html#Datacenters[here]
+
+|Priority
+|`spring.cloud.deployer.nomad.priority=25`
+|The default job priority. Default value is 50. See https://www.nomadproject.io/docs/jobspec/json.html#Priority[here]
+
+|Environment Variables
+|`spring.cloud.deployer.nomad.environmentVariables=ENV_VAR_1=test`
+|Common environment variables to set for any deployed app.
+
+|Expose app via Fabio
+|`spring.cloud.deployer.nomad.exposeViaFabio=true`
+|Flag to indicate whether an app should be exposed via https://github.com/eBay/fabio[Fabio]
+
+|HTTP Health Check - Path
+|`spring.cloud.deployer.nomad.checkHttpPath=/management/health`
+|The https://www.nomadproject.io/docs/jobspec/json.html#Path[path] of the HTTP endpoint which Consul (if available) will query to query the health
+
+|HTTP Health Check - Interval
+|`spring.cloud.deployer.nomad.checkInterval=60000`
+|This indicates the frequency of the health checks that Consul will perform. Specified in milliseconds. See https://www.nomadproject.io/docs/jobspec/json.html#Interval[here]
+
+|HTTP Health Check - Timeout
+|`spring.cloud.deployer.nomad.checkTimeout=14646`
+|This indicates how long Consul will wait for a health check query to succeed. Specified in milliseconds. See https://www.nomadproject.io/docs/jobspec/json.html#Timeout[here]
+
+|Resource - CPU
+|`spring.cloud.deployer.nomad.resources.cpu=500`
+|The https://www.nomadproject.io/docs/jobspec/json.html#[CPU] required in MHz. Default is 1000MHz
+
+|Resource - Memory
+|`spring.cloud.deployer.nomad.resources.memory=1024`
+|The https://www.nomadproject.io/docs/jobspec/json.html#MemoryMB[memory] required in MB. Default is 512MB
+
+|Resource - Network
+|`spring.cloud.deployer.nomad.resources.networkMBits=100`
+|The number of https://www.nomadproject.io/docs/jobspec/json.html#MBits[MBits] in bandwidth required
+
+|Ephemeral Disk - Sticky
+|`spring.cloud.deployer.nomad.resources.ephemeralDisk.sticky=false`
+|Specifies that Nomad should make a best-effort attempt to place the updated allocation on the same machine. See https://www.nomadproject.io/docs/job-specification/ephemeral_disk.html#sticky[here]
+
+|Ephemeral Disk - Migrate
+|`spring.cloud.deployer.nomad.ephemeralDisk.migrate=false`
+|Specifies that the Nomad client should make a best-effort
+
+|Ephemeral Disk - Size
+|`spring.cloud.deployer.nomad.ephemeralDisk.size=500`
+|Specifies the size of the ephemeral disk in MB
+
+|Logging - Max Files
+|`spring.cloud.deployer.nomad.loggingMaxFiles=2`
+|The https://www.nomadproject.io/docs/jobspec/json.html#MaxFiles[maximum number of rotated files] Nomad will retain. The default is 1 log file retention size
+
+|Logging - Max File Size
+|`spring.cloud.deployer.nomad.loggingMaxFileSize=20`
+|The https://www.nomadproject.io/docs/jobspec/json.html#MaxFileSizeMB[size] of each rotated file. The size is specified in MB. The default is 10MB max log file size
+
+|Restart Policy - Delay
+|`spring.cloud.deployer.nomad.restartPolicyDelay=10000`
+|A duration to wait before restarting a task. Specified in milliseconds. Default is 30000 milliseconds (30 seconds). See https://www.nomadproject.io/docs/jobspec/json.html#Delay[here]
+
+|Restart Policy - Interval
+|`spring.cloud.deployer.nomad.restartPolicyInterval=5000`
+|The Interval begins when the first task starts and ensures that only X number of attempts number of. Specified in milliseconds. Default is 120000 milliseconds (120 seconds / 3 minutes). See https://www.nomadproject.io/docs/jobspec/json.html#Interval[here]
+
+|Restart Policy - Attempts
+|`spring.cloud.deployer.nomad.restartPolicyAttempts=1`
+|Attempts is the number of restarts allowed in an Interval. Default is 3 attempts within 3 minutes. See https://www.nomadproject.io/docs/jobspec/json.html#Attempts[here]
+
+|Restart Policy - Mode
+|`spring.cloud.deployer.nomad.restartPolicyMode=1`
+|Mode is given as a string and controls the behavior when the task fails more than X number of attempts times in an Interval. Default value is https://www.nomadproject.io/docs/jobspec/json.html#delay["delay"]. See https://www.nomadproject.io/docs/jobspec/json.html#Mode[here]
+
+|Docker - Entrypoint Style
+|`spring.cloud.deployer.nomad.entryPointStyle=shell`
+|Entry point style used for the Docker image. To be used to determine how to pass in properties
+
+|Docker - Volumes
+|`spring.cloud.deployer.nomad.volumes=/var/test:/test`
+|A comma separated list of `host_path:container_path` values. See https://www.nomadproject.io/docs/drivers/docker.html#volumes[here]
+
+|Maven - Artifact Destination
+|`spring.cloud.deployer.nomad.artifactDestination=local/app`
+|The destination (path) where artifacts will be downloaded by default. Default value is `local`. See https://www.nomadproject.io/docs/job-specification/artifact.html#destination[here]
+
+|Maven - Java Options
+|`spring.cloud.deployer.nomad.javaOpts=-Xms64m,-Xmx128m`
+|A comma separated list of default Java options to pass to the JVM. Only applicable to the Maven resource deployer implementation. See http://docs.spring.io/spring-cloud-dataflow/docs/current/reference/htmlsingle/index.html#getting-started-application-configuration[for reference]
+
+|Maven - Deployer Scheme
+|`spring.cloud.deployer.nomad.deployerScheme=https`
+|The URI scheme that the deployer server is running on. When deploying Maven resource based apps the artifact source URL includes the servers host and port. This property value is used when constructing the source URL. See https://www.nomadproject.io/docs/job-specification/artifact.html#source[here]
+
+|Maven - Deployer Host
+|`spring.cloud.deployer.nomad.deployerHost=scdf-nomad.cluster.com`
+|The resolvable hostname of IP address that the deployer server is running on. When deploying Maven resource based apps the artifact source URL includes the servers host and port. This property value is used when constructing the source URL. See https://www.nomadproject.io/docs/job-specification/artifact.html#source[here]
+
+|Maven - Deployer Port
+|`spring.cloud.deployer.nomad.deployerPort=443`
+|The port that the deployer server is listening on. When deploying Maven resource based apps the artifact source URL includes the servers host and port. This property value is used when constructing the source URL. See https://www.nomadproject.io/docs/job-specification/artifact.html#source[here]
+
+|Maven - Minimum Java Version
+|`spring.cloud.deployer.nomad.minimumJavaVersion=1.7`
+|If set, the allocated node must support at least this version of a Java runtime environment. E.g. '1.8' for a minimum of a Java 8 JRE/JDK. See https://www.nomadproject.io/docs/drivers/java.html#driver_java_version[here]
+|===

@@ -1,0 +1,347 @@
+[[getting-started]]
+= Getting Started
+
+== Deploying Streams on Nomad
+
+The following guide assumes that you have a https://www.nomadproject.io/[Nomad 0.5+] cluster available.
+If you do not have a Nomad cluster available, see the next section which describes running a local Nomad for development/testing
+otherwise continue to <<installing-scdf>>.
+
+=== A local Nomad cluster with Vagrant Hashistack
+
+There are a few ways to stand up a local Nomad cluster on your machine for testing.
+For the purpose of this guide, the https://github.com/donovanmuller/hashistack-vagrant[hashistack-vagrant] project will be used.
+
+[IMPORTANT]
+====
+The `hashistack-vagrant` VM is configured by default with `2048 MB` of memory and `2` CPUs.
+If you run into issues with job allocations failing because of resource starvation, you can tweak the
+memory and CPU configuration in the `Vagrantfile`.
+
+Please see the https://github.com/donovanmuller/spring-cloud-dataflow-server-nomad/wiki/Resource-Allocations[Resource Allocations]
+section in the `spring-cloud-dataflow-server-nomad` project Wiki for more information.
+====
+
+==== Installation and Getting Started
+
+Follow the https://github.com/donovanmuller/hashistack-vagrant#quickstart[Quickstart]
+section of the https://github.com/donovanmuller/hashistack-vagrant[hashistack-vagrant].
+
+Once you have successfully started the Vagrant VM and (with `tmuxp load full-hashistack.yml`) "hashistack",
+make sure you can use the `nomad` client to query the local instance:
+
+[source,console]
+----
+vagrant@hashistack:~$ nomad status
+No running jobs
+----
+
+[NOTE]
+====
+You could also install the `nomad` binary locally and connect to the Nomad client running inside the VM. For example
+on Mac you could install Nomad with homebrew and add the `--address` option to your commands:
+
+[subs="attributes"]
+[source,console]
+----
+$ brew install nomad
+...
+$ nomad status --address=http://172.16.0.2:4646
+ID    Type     Priority  Status
+scdf  service  50        running
+----
+====
+
+[[installing-scdf]]
+=== Installing the Data Flow Server for Nomad
+
+To install a Data Flow Server and supporting infrastructure components to Nomad we will use the provided Job specification provided
+in the https://github.com/donovanmuller/spring-cloud-dataflow-server-nomad/tree/{scdf-server-nomad-version}/src/etc/nomad[`src/etc/nomad/`]
+directory of the project's GitHub repository.
+
+NOTE: This Job requires the https://www.nomadproject.io/docs/drivers/docker.html[Docker] driver.
+
+This job specification includes the following tasks:
+
+* Spring Cloud Data Flow Server for Nomad
+* MySQL - as the datasource for the Data Flow Server
+* Redis - for analytics support
+* Kafka - as the Spring Cloud Stream default binder implementation
+
+TIP: If you are not using the hashistack-vagrant VM, please adjust the `region` and `datacenters`
+values in the `scdf.nomad` job specification file accordingly.
+
+Next, using the SSH session to the VM, run the job with:
+
+[subs="attributes"]
+[source,console]
+----
+vagrant@hashistack:~$ nomad run https://github.com/donovanmuller/spring-cloud-dataflow-server-nomad/tree/{scdf-server-nomad-version}/src/etc/nomad/nexus.nomad
+==> Monitoring evaluation "67f078e6"
+    Evaluation triggered by job "scdf"
+    Allocation "966c4cbd" created: node "c99cf24d", group "scdfr"
+    Allocation "966c4cbd" status changed: "pending" -> "running"
+    Evaluation status changed: "pending" -> "complete"
+==> Evaluation "67f078e6" finished with status "complete"
+----
+
+Allow some time for the Docker images to be pulled and all containers to be started.
+You can verify that all tasks have been successfully started by checking the
+corresponding allocation status:
+
+[source,console]
+----
+vagrant@hashistack:~$ nomad alloc-status 966c4cbd
+ID                 = 3d235c82
+Eval ID            = 04164728
+Name               = scdf.scdf[0]
+Node ID            = 2dd82384
+Job ID             = scdf
+Client Status      = running
+Client Description = <none>
+Created At         = 12/13/16s 09:15:20 UTC
+
+Task "kafka" is "running"
+Task Resources
+CPU         Memory           Disk  IOPS  Addresses
+13/500 MHz  506 MiB/512 MiB  0 B   0     kafka: 10.0.2.15:9092
+
+Recent Events:
+Time                   Type        Description
+12/13/16 09:15:47 UTC  Started     Task started by client
+12/13/16 09:15:36 UTC  Restarting  Task restarting in 10.338625681s
+12/13/16 09:15:36 UTC  Terminated  Exit Code: 1, Exit Message: "Docker container exited with non-zero exit code: 1"
+12/13/16 09:15:35 UTC  Started     Task started by client
+12/13/16 09:15:24 UTC  Restarting  Task restarting in 10.118221449s
+12/13/16 09:15:24 UTC  Terminated  Exit Code: 1, Exit Message: "Docker container exited with non-zero exit code: 1"
+12/13/16 09:15:22 UTC  Started     Task started by client
+12/13/16 09:15:20 UTC  Received    Task received by client
+
+Task "mysql" is "running"
+Task Resources
+CPU        Memory           Disk  IOPS  Addresses
+2/500 MHz  115 MiB/128 MiB  0 B   0     db: 10.0.2.15:3306
+
+Recent Events:
+Time                   Type      Description
+12/13/16 09:15:22 UTC  Started   Task started by client
+12/13/16 09:15:20 UTC  Received  Task received by client
+
+Task "redis" is "running"
+Task Resources
+CPU        Memory          Disk  IOPS  Addresses
+2/256 MHz  6.2 MiB/64 MiB  0 B   0     redis: 10.0.2.15:6379
+
+Recent Events:
+Time                   Type      Description
+12/13/16 09:15:22 UTC  Started   Task started by client
+12/13/16 09:15:20 UTC  Received  Task received by client
+
+Task "scdf-server" is "running"
+Task Resources
+CPU        Memory           Disk  IOPS  Addresses
+3/500 MHz  304 MiB/384 MiB  0 B   0     http: 10.0.2.15:9393
+
+Recent Events:
+Time                   Type        Description
+12/13/16 09:15:42 UTC  Started     Task started by client
+...
+
+Task "zookeeper" is "running"
+Task Resources
+CPU        Memory          Disk  IOPS  Addresses
+3/500 MHz  84 MiB/128 MiB  0 B   0     zookeeper: 10.0.2.15:2181
+                                       follower: 10.0.2.15:2888
+                                       leader: 10.0.2.15:3888
+
+...
+----
+
+or alternatively check the health status of all services using the Consul UI:
+
+image::{scdf-server-nomad-asciidoc}/images/scdf-nomad-up.png[Data Flow Server and components up]
+
+[NOTE]
+====
+If you are using a local `nomad` binary you can reference the remote `scdf.nomad` file directly.
+
+[subs="attributes"]
+[source,console]
+----
+$ nomad run --address=http://172.16.0.2:4646 https://raw.githubusercontent.com/donovanmuller/spring-cloud-dataflow-server-nomad/{scdf-server-nomad-version}/src/etc/nomad/scdf.nomad
+...
+----
+
+====
+
+=== Download and run the Spring Cloud Data Flow Shell
+
+Download and run the Shell, targeting the Data Flow Server exposed via a Fabio route.
+
+[subs="attributes"]
+[source,console]
+----
+$ wget http://repo.spring.io/{dataflow-version-type-lowercase}/org/springframework/cloud/spring-cloud-dataflow-shell/{dataflow-project-version}/spring-cloud-dataflow-shell-{dataflow-project-version}.jar
+$ java -jar spring-cloud-dataflow-shell-{dataflow-project-version}.jar --dataflow.uri=http://scdf-server.hashistack.vagrant/
+
+  ____                              ____ _                __
+ / ___| _ __  _ __(_)_ __   __ _   / ___| | ___  _   _  __| |
+ \___ \| '_ \| '__| | '_ \ / _` | | |   | |/ _ \| | | |/ _` |
+  ___) | |_) | |  | | | | | (_| | | |___| | (_) | |_| | (_| |
+ |____/| .__/|_|  |_|_| |_|\__, |  \____|_|\___/ \__,_|\__,_|
+  ____ |_|    _          __|___/                 __________
+ |  _ \  __ _| |_ __ _  |  ___| | _____      __  \ \ \ \ \ \
+ | | | |/ _` | __/ _` | | |_  | |/ _ \ \ /\ / /   \ \ \ \ \ \
+ | |_| | (_| | || (_| | |  _| | | (_) \ V  V /    / / / / / /
+ |____/ \__,_|\__\__,_| |_|   |_|\___/ \_/\_/    /_/_/_/_/_/
+
+{dataflow-project-version}
+
+Welcome to the Spring Cloud Data Flow shell. For assistance hit TAB or type "help".
+dataflow:>
+----
+
+=== Registering Stream applications with Docker resource
+
+Now register all out-of-the-box stream applications using the Docker resource type, built with the Kafka binder in bulk with the following command.
+
+TIP: For more details, review how to link:http://docs.spring.io/spring-cloud-dataflow/docs/{scdf-core-version}/reference/html/spring-cloud-dataflow-register-apps.html[register applications].
+
+[source,console]
+----
+dataflow:>app import --uri http://bit.ly/stream-applications-kafka-docker
+Successfully registered applications: [source.tcp, sink.jdbc, source.http, sink.rabbit, source.rabbit, source.ftp, sink.gpfdist, processor.transform, source.loggregator, source.sftp, processor.filter, sink.cassandra, processor.groovy-filter, sink.router, source.trigger, sink.hdfs-dataset, processor.splitter, source.load-generator, processor.tcp-client, source.time, source.gemfire, source.twitterstream, sink.tcp, source.jdbc, sink.field-value-counter, sink.redis-pubsub, sink.hdfs, processor.bridge, processor.pmml, processor.httpclient, source.s3, sink.ftp, sink.log, sink.gemfire, sink.aggregate-counter, sink.throughput, source.triggertask, sink.s3, source.gemfire-cq, source.jms, source.tcp-client, processor.scriptable-transform, sink.counter, sink.websocket, source.mongodb, source.mail, processor.groovy-transform, source.syslog]
+----
+
+=== Deploy a simple stream in the shell
+
+Create a simple `ticktock` stream definition and deploy it immediately using the following command:
+
+[source,console]
+----
+dataflow:>stream create --name ticktock --definition "time | log" --deploy
+Created new stream 'ticktock'
+Deployment request has been sent
+----
+
+Verify the deployed apps using the by checking the status of the apps using the Shell:
+
+image::{scdf-server-nomad-asciidoc}/images/scdf-nomad-stream-deployed.png[ticktock streamd deployed]
+
+To verify that the stream is working as expected, tail the logs of the `ticktock-log` using `nomad`:
+
+[source,console]
+----
+vagrant@hashistack:~$ nomad logs 71f7aba1
+...
+...  INFO 1 --- [afka-listener-1] log-sink                                 : 11/29/16 14:49:59
+...  INFO 1 --- [afka-listener-1] log-sink                                 : 11/29/16 14:50:01
+...  INFO 1 --- [afka-listener-1] log-sink                                 : 11/29/16 14:50:02
+...  INFO 1 --- [afka-listener-1] log-sink                                 : 11/29/16 14:50:03
+...  INFO 1 --- [afka-listener-1] log-sink                                 : 11/29/16 14:50:04
+...  INFO 1 --- [afka-listener-1] log-sink                                 : 11/29/16 14:50:05
+...  INFO 1 --- [afka-listener-1] log-sink                                 : 11/29/16 14:50:06
+...
+----
+
+=== Registering Stream applications with Maven resource
+
+The Data Flow Server for Nomad also supports apps registered with a Maven resource URI
+in addition to the Docker resource type. Using the `ticktock` stream example above, we will create a similar stream definition
+but using the Maven resource versions of the apps.
+
+For this example we will register the apps individually using the following command:
+
+[subs="attributes"]
+[source,console]
+----
+dataflow:>app register --type source --name time-mvn --uri maven://org.springframework.cloud.stream.app:time-source-kafka:{dataflow-project-version}
+Successfully registered application 'source:time-mvn'
+dataflow:>app register --type sink --name log-mvn --uri maven://org.springframework.cloud.stream.app:log-sink-kafka:{dataflow-project-version}
+Successfully registered application 'sink:log-mvn'
+----
+
+NOTE: We couldn't bulk import the Maven version of the apps as we did for the Docker versions because the app names
+would conflict, as the names defined in the bulk import files are the same across resource types. Hence we register the
+Maven apps with a `-mvn` suffix.
+
+=== Deploy a simple stream in the shell
+
+Create a simple `ticktock-mvn` stream definition and deploy it immediately using the following command:
+
+[source,console]
+----
+dataflow:>stream create --name ticktock-mvn --definition "time-mvn | log-mvn" --deploy
+Created new stream 'ticktock-mvn'
+Deployment request has been sent
+----
+
+NOTE: There could be a slight delay once the above command is issued. This is due to the Maven artifacts being
+resolved and cached locally. Depending on the size of the artifacts, this could take some time.
+
+To verify that the stream is working as expected, tail the logs of the `ticktock-mvn-log-mvn` using `nomad`:
+
+[source,console]
+----
+$ nomad logs -f 3f474cc7
+...
+...  INFO 1 --- [afka-listener-1] log-sink                                 : 11/29/16 18:34:23
+...  INFO 1 --- [afka-listener-1] log-sink                                 : 11/29/16 18:34:25
+...  INFO 1 --- [afka-listener-1] log-sink                                 : 11/29/16 18:34:26
+...  INFO 1 --- [afka-listener-1] log-sink                                 : 11/29/16 18:34:27
+----
+
+== Deploying Tasks on Nomad
+
+Deploying Task applications using the Data Flow Server for Nomad is a similar affair to deploying Stream apps.
+Therefore, for brevity, only the Maven resource version of the task will be shown as an example.
+
+=== Registering Task application with Maven resource
+
+This time we will bulk import the Task application, as we do not have any Docker resource versions imported which would cause conflicts in naming.
+Import all Maven task applications with the following command:
+
+[source,console]
+----
+dataflow:>app import --uri http://bit.ly/1-0-1-GA-task-applications-maven
+----
+
+=== Launch a simple task in the shell
+
+Let’s create a simple task definition and launch it.
+
+[source,console]
+----
+dataflow:>task create task1 --definition "timestamp"
+dataflow:>task launch task1
+----
+
+Verify that the task executed successfully by executing these commands:
+
+[source,console]
+----
+dataflow:>task list
+╔═════════╤═══════════════╤═══════════╗
+║Task Name│Task Definition│Task Status║
+╠═════════╪═══════════════╪═══════════╣
+║task1    │timestamp      │complete   ║
+╚═════════╧═══════════════╧═══════════╝
+
+dataflow:>task execution list
+╔═════════╤══╤═════════════════════════════╤═════════════════════════════╤═════════╗
+║Task Name│ID│         Start Time          │          End Time           │Exit Code║
+╠═════════╪══╪═════════════════════════════╪═════════════════════════════╪═════════╣
+║task1    │1 │Tue Dec 13 15:34:01 SAST 2016│Tue Dec 13 15:34:01 SAST 2016│0        ║
+╚═════════╧══╧═════════════════════════════╧═════════════════════════════╧═════════╝
+----
+
+You can also view the task execution status by using the Data Flow Server UI.
+
+==== Cleanup completed tasks
+
+If you want to delete the Build and Pod created by this task execution, execute the following:
+
+[source,console]
+----
+dataflow:>task destroy --name task1
+----

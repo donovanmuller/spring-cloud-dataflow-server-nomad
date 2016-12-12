@@ -1,0 +1,78 @@
+[[deployment]]
+= Deployment Properties
+
+[partintro]
+--
+The following deployment properties are supported by the Data Flow Server for Nomad.
+These properties are passed as deployment properties when deploying streams or tasks.
+Below is an example of deploying a stream definition:
+
+[source,console]
+----
+dataflow:>stream create --name test --definition "time | custom | log"
+Created new stream 'test'
+
+dataflow:>stream deploy test --properties "app.custom.spring.cloud.deployer.nomad.job.priority=75"
+Deployment request has been sent for stream 'test'
+----
+
+Note the deployment property `app.custom.spring.cloud.deployer.nomad.job.priority=75`.
+--
+
+== Supported Deployment Properties
+
+[cols="1,1,2", options="header"]
+|===
+|Name |Usage Example |Description
+
+|Job Priority
+|`spring.cloud.deployer.nomad.job.priority=75`
+|Job priority. See https://www.nomadproject.io/docs/jobspec/json.html#Priority[here]
+
+|Fabio - Expose flag
+|`spring.cloud.deployer.nomad.fabio.expose=true`
+|A flag to indicate whether the tags/labels that enable Fabio to configure routing are added or not. Specify a value of `true` to enable adding the URL prefix tags. See https://github.com/eBay/fabio/wiki/Quickstart[here]
+
+|Fabio - Hostname
+|`spring.cloud.deployer.nomad.fabio.route.hostname=testapp`
+|The hostname that will be exposed via Fabio. If no hostname is provided, the deploymentId will be used. See https://github.com/eBay/fabio/wiki/Quickstart[here]
+
+|Resources - CPU
+|`spring.cloud.deployer.nomad.cpu=500`
+|The https://www.nomadproject.io/docs/jobspec/json.html#CPU[CPU] required in MHz
+
+|Resources - Memory
+|`spring.cloud.deployer.nomad.memory=1024`
+|The https://www.nomadproject.io/docs/jobspec/json.html#MemoryMB[memory] required in MB
+
+|Environment Variables
+|`spring.cloud.deployer.nomad.environmentVariables=ENV_VAR_1=ENV_VAL_1`
+|Environment variables passed at deployment time. This is to cater for adding variables like JAVA_OPTS to supported deployer types
+
+|Docker - Entrypoint Style
+|`spring.cloud.deployer.nomad.entryPointStyle=shell`
+|Entry point style used for the Docker image. To be used to determine how to pass in properties
+
+|Docker - Volumes
+|`spring.cloud.deployer.nomad.volumes=/var/test:/test`
+|A comma separated list of `host_path:container_path` values. See https://www.nomadproject.io/docs/drivers/docker.html#volumes[here]
+
+|Meta
+|`spring.cloud.deployer.nomad.meta=streamVersion=1.0.0,streamDescription=A test stream`
+|An optional comma separated list of https://www.nomadproject.io/docs/job-specification/meta.html[meta] stanzas to add at the Job level
+
+|Ephemeral Disk - Sticky
+|`spring.cloud.deployer.nomad.resources.ephemeralDisk.sticky=false`
+|Specifies that Nomad should make a best-effort attempt to place the updated allocation on the same machine. See https://www.nomadproject.io/docs/job-specification/ephemeral_disk.html#sticky[here]
+
+|Ephemeral Disk - Migrate
+|`spring.cloud.deployer.nomad.ephemeralDisk.migrate=false`
+|Specifies that the Nomad client should make a best-effort
+
+|Ephemeral Disk - Size
+|`spring.cloud.deployer.nomad.ephemeralDisk.size=500`
+|Specifies the size of the ephemeral disk in MB
+|Maven - Java Options
+|`spring.cloud.deployer.nomad.javaOpts=-Xms64m,-Xmx128m`
+|A comma separated list of default Java options to pass to the JVM. Only applicable to the Maven resource deployer implementation. See http://docs.spring.io/spring-cloud-dataflow/docs/current/reference/htmlsingle/index.html#getting-started-application-configuration[for reference]
+|===

@@ -1,0 +1,70 @@
+[[features]]
+= Features
+
+[partintro]
+--
+The Data Flow Server for Nomad includes the following highlighted features.
+--
+
+== Support for Maven and Docker resources
+
+Nomad supports both https://www.nomadproject.io/docs/drivers/java.html[Java]
+and https://www.nomadproject.io/docs/drivers/docker.html[Docker]
+drivers that the Data Flow server can utilise to support apps registered as
+Maven and Docker resources.
+
+For example, both the below app registrations (via the Data Flow Shell) are valid and supported:
+
+```
+dataflow:>app register --name http-mvn --type source --uri maven://org.springframework.cloud.stream.app:http-source-rabbit:1.1.0.RELEASE
+dataflow:>app import --name http-docker --type source --uri app register --name http --type source --uri docker:springcloudstream/http-source-rabbit:1.1.0.RELEASE
+```
+
+See the <<getting-started>> section for examples of deploying both Docker and Maven resource types.
+
+== Docker volume support
+
+Docker volume support was added in Nomad https://github.com/hashicorp/nomad/blob/master/CHANGELOG.md#050-november-16-2016[0.5].
+which allows the Data Flow Server for Nomad to support defining Docker volumes, both as deployer and app deployment
+properties.
+
+NOTE: Volumes defined at deployer level will be added to _all_ deployed apps. This is handy for
+common shared folders that should be available to all apps.
+
+Below is an example of volumes defined as a server deployer property:
+
+[source,yaml]
+----
+spring.cloud.deployer.nomad:
+  volumes: /opt/data:/data,/opt/config:/config
+----
+
+where volumes are defined as a comma separated list in the form of `host_path:container_path`.
+
+Examples of the deployment property (via the Data Flow Shell) variation of defining volumes and volume mounts below:
+
+[source,console]
+----
+dataflow:>stream create --name test --definition "time | file"
+Created new stream 'timezoney'
+
+dataflow:>stream deploy test --properties "app.file.spring.cloud.deployer.nomad.volumes=/opt/data:/data,/opt/config:/config"
+----
+
+See the Nomad Docker https://www.nomadproject.io/docs/drivers/docker.html#volumes[volume documentation] for more details.
+
+== Ephemeral disks
+
+The new https://www.nomadproject.io/docs/job-specification/ephemeral_disk.html[ephemeral_disk]
+stanza added in Nomad 0.5 is supported, allowing you to configure an ephemeral disk with app deployment properties.
+
+== App status derived from Consul
+
+The default states for a Nomad https://www.nomadproject.io/docs/job-specification/index.html[job]
+are not really indicative of a healthy application.
+For instance an app may appear to be running based on the Nomad Job/Allocation state
+but is in fact not healthy as determined by invoking the app's
+health endpoint (e.g. `/health`). For a more accurate app status, the Data Flow Server for Nomad can now
+include the Consul (if available) health check status fo the registered app's Service.
+
+This feature is implemented using https://cloud.spring.io/spring-cloud-consul/[Spring Cloud Consul].

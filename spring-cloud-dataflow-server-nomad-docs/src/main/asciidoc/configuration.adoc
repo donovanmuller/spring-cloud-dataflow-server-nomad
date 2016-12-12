@@ -1,0 +1,28 @@
+[[configuration]]
+= Configuration
+
+[partintro]
+--
+The Data Flow Server for Nomad supports all the common configuration options.
+See https://github.com/donovanmuller/spring-cloud-deployer-nomad/blob/{scdf-server-nomad-version}/src/main/java/org/springframework/cloud/deployer/spi/nomad/NomadDeployerProperties.java[NomadDeployerProperties]
+for the supported deployer configuration items.
+--
+
+== Maven Configuration
+
+The Maven configuration is important for resolving Maven app artifacts.
+The following example configures a `spring` remote Maven repository:
+
+```
+maven:
+  remote-repositories.spring:
+    url: http://repo.spring.io/libs-snapshot
+    auth:
+      username:
+      password:
+```
+
+NOTE: More configuration options can be seen in the http://docs.spring.io/spring-cloud-dataflow/docs/{scdf-core-version}/reference/html/_configure_maven_properties.html#_configure_maven_properties[Configure Maven Properties]
+section in the Data Flow reference documentation.
+
+

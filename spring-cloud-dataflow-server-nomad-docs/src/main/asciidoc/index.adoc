@@ -1,0 +1,35 @@
+= Spring Cloud Data Flow Server for Nomad
+Donovan Muller
+:doctype: book
+:toc:
+:toclevels: 4
+:source-highlighter: prettify
+:numbered:
+:icons: font
+:hide-uri-scheme:
+:attributes: allow-uri-read
+
+:scdf-core-version: {dataflow-project-version}
+:scdf-server-nomad-version: v{project-version}
+
+:scdf-server-nomad-asciidoc: https://github.com/donovanmuller/spring-cloud-dataflow-server-nomad/raw/master/spring-cloud-dataflow-server-nomad-docs/src/main/asciidoc
+
+// ======================================================================================
+
+include::introduction.adoc[]
+
+include::overview.adoc[]
+
+include::features.adoc[]
+
+include::getting-started.adoc[]
+
+include::configuration.adoc[]
+
+include::server.adoc[]
+
+include::deployment.adoc[]
+
+include::howto.adoc[]
+
+// ======================================================================================
