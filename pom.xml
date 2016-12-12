@@ -16,14 +16,25 @@
     <version>1.1.0.BUILD-SNAPSHOT</version>
     <packaging>pom</packaging>
 
+	<name>Spring Cloud Data Flow Server for Nomad</name>
+	<description>Spring Cloud Data Flow Server for Nomad</description>
+
+	<scm>
+		<connection>scm:git:git@github.com:donovanmuller/spring-cloud-dataflow-server-nomad.git</connection>
+		<developerConnection>scm:git:git@github.com:donovanmuller/spring-cloud-dataflow-server-nomad.git</developerConnection>
+		<url>https://github.com/donovanmuller/spring-cloud-dataflow-server-nomad</url>
+		<tag>HEAD</tag>
+	</scm>
+
     <modules>
+        <module>spring-cloud-dataflow-server-nomad-autoconfig</module>
         <module>spring-cloud-dataflow-server-nomad</module>
-        <module>spring-cloud-starter-dataflow-server-nomad</module>
+        <module>spring-cloud-dataflow-server-nomad-docs</module>
     </modules>
 
     <properties>
         <spring-cloud-dataflow.version>1.1.0.RELEASE</spring-cloud-dataflow.version>
-        <spring-cloud-deployer-nomad.version>1.1.0.BUILD-SNAPSHOT</spring-cloud-deployer-nomad.version>
+        <spring-cloud-deployer-nomad.version>1.1.0.RELEASE</spring-cloud-deployer-nomad.version>
     </properties>
 
     <dependencyManagement>
@@ -40,6 +51,19 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>2.5.3</version>
+				<configuration>
+					<autoVersionSubmodules>true</autoVersionSubmodules>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 
     <profiles>
         <profile>
@@ -89,5 +113,52 @@
                 </pluginRepository>
             </pluginRepositories>
         </profile>
+		<profile>
+			<id>release-sign-artifacts</id>
+			<activation>
+				<property>
+					<name>performRelease</name>
+					<value>true</value>
+				</property>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>1.6</version>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<configuration>
+							<skip>true</skip>
+						</configuration>
+					</plugin>
+					<plugin>
+						<artifactId>maven-site-plugin</artifactId>
+						<configuration>
+							<skip>true</skip>
+							<skipDeploy>true</skipDeploy>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
     </profiles>
+
+	<distributionManagement>
+		<repository>
+			<id>bintray-switchbit-public</id>
+			<url>https://api.bintray.com/maven/donovanmuller/switchbit-public/spring-cloud-dataflow-server-nomad/;publish=1</url>
+		</repository>
+	</distributionManagement>
 </project>

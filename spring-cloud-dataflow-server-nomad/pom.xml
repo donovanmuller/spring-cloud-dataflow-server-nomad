@@ -13,6 +13,9 @@
     <groupId>org.springframework.cloud</groupId>
     <artifactId>spring-cloud-dataflow-server-nomad</artifactId>
 
+    <!-- Used in the Spring Boot Banner -->
+    <name>Data Flow Server for Nomad</name>
+
     <properties>
         <start-class>org.springframework.cloud.dataflow.server.nomad.NomadDataFlowServer</start-class>
     </properties>
@@ -20,8 +23,8 @@
     <dependencies>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-dataflow-server-nomad</artifactId>
-            <version>1.1.0.BUILD-SNAPSHOT</version>
+            <artifactId>spring-cloud-dataflow-server-nomad-autoconfig</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.mariadb.jdbc</groupId>
@@ -73,7 +76,7 @@
             <plugin>
                 <groupId>io.fabric8</groupId>
                 <artifactId>docker-maven-plugin</artifactId>
-                <version>0.16.7</version>
+                <version>0.18.1</version>
                 <configuration>
                     <images>
                         <image>
