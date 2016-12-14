@@ -64,7 +64,7 @@ job specification.
 ----
 vagrant@hashistack:~$ nomad stop scdf
 ...
-vagrant@hashistack:~$ nomad run https://github.com/donovanmuller/spring-cloud-dataflow-server-nomad/tree/{scdf-server-nomad-version}/src/etc/nomad/scdf-with-nexus.nomad
+vagrant@hashistack:~$ nomad run https://raw.githubusercontent.com/donovanmuller/spring-cloud-dataflow-server-nomad/{scdf-server-nomad-version}/src/etc/nomad/scdf-with-nexus.nomad
 ...
 ----
 

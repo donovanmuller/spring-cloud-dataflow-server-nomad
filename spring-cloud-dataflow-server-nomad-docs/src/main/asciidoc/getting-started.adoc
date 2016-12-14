@@ -76,7 +76,7 @@ Next, using the SSH session to the VM, run the job with:
 [subs="attributes"]
 [source,console]
 ----
-vagrant@hashistack:~$ nomad run https://github.com/donovanmuller/spring-cloud-dataflow-server-nomad/tree/{scdf-server-nomad-version}/src/etc/nomad/nexus.nomad
+vagrant@hashistack:~$ nomad run https://raw.githubusercontent.com/donovanmuller/spring-cloud-dataflow-server-nomad/{scdf-server-nomad-version}/src/etc/nomad/nexus.nomad
 ==> Monitoring evaluation "67f078e6"
     Evaluation triggered by job "scdf"
     Allocation "966c4cbd" created: node "c99cf24d", group "scdfr"

@@ -41,7 +41,7 @@ spring.cloud.deployer.nomad:
 
 where volumes are defined as a comma separated list in the form of `host_path:container_path`.
 
-Examples of the deployment property (via the Data Flow Shell) variation of defining volumes and volume mounts below:
+Examples of the deployment property (via the Data Flow Shell) variation of defining volumes below:
 
 [source,console]
 ----
