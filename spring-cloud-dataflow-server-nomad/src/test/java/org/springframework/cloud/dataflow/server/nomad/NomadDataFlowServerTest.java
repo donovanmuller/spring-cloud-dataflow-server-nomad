@@ -42,7 +42,7 @@ public class NomadDataFlowServerTest {
 	public void testSupportedResource() {
 		DelegatingResourceLoader resourceLoader = context.getBean(DelegatingResourceLoader.class);
 		assertThat(resourceLoader
-				.getResource("maven://org.springframework.cloud:spring-cloud-dataflow-server-core:1.1.0.RELEASE"))
+				.getResource("maven://org.springframework.cloud:spring-cloud-dataflow-server-core:1.2.1.RELEASE"))
 						.isInstanceOf(MavenResource.class);
 		assertThat(resourceLoader.getResource("docker://helloworld:latest")).isInstanceOf(DockerResource.class);
 	}

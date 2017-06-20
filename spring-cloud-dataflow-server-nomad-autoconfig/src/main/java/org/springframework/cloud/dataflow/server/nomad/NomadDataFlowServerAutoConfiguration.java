@@ -16,7 +16,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.io.ResourceLoader;
 
 /**
- * AutoConfiguration for the {@link NomadDataFlowServer}
+ * AutoConfiguration for the NomadDataFlowServer
  *
  * @author Donovan Muller
  */
