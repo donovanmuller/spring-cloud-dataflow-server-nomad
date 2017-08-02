@@ -13,7 +13,7 @@ job "nexus" {
 		task "nexus" {
 			driver = "docker"
 			config {
-				image = "sonatype/nexus"
+				image = "sonatype/nexus:2.14.4"
 				port_map {
 					http = 8081
 				}

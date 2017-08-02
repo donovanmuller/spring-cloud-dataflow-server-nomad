@@ -64,6 +64,7 @@ NOTE: This Job requires the https://www.nomadproject.io/docs/drivers/docker.html
 This job specification includes the following tasks:
 
 * Spring Cloud Data Flow Server for Nomad
+* Spring Cloud Data Flow Metrics Collector
 * MySQL - as the datasource for the Data Flow Server
 * Redis - for analytics support
 * Kafka - as the Spring Cloud Stream default binder implementation
@@ -77,12 +78,11 @@ Next, using the SSH session to the VM, run the job with:
 [source,console]
 ----
 vagrant@hashistack:~$ nomad run https://raw.githubusercontent.com/donovanmuller/spring-cloud-dataflow-server-nomad/{scdf-server-nomad-version}/src/etc/nomad/nexus.nomad
-==> Monitoring evaluation "67f078e6"
+==> Monitoring evaluation "491168de"
     Evaluation triggered by job "scdf"
-    Allocation "966c4cbd" created: node "c99cf24d", group "scdfr"
-    Allocation "966c4cbd" status changed: "pending" -> "running"
+    Allocation "63c64eaf" created: node "774539c7", group "scdf"
     Evaluation status changed: "pending" -> "complete"
-==> Evaluation "67f078e6" finished with status "complete"
+==> Evaluation "491168de" finished with status "complete"
 ----
 
 Allow some time for the Docker images to be pulled and all containers to be started.
@@ -91,75 +91,116 @@ corresponding allocation status:
 
 [source,console]
 ----
-vagrant@hashistack:~$ nomad alloc-status 966c4cbd
-ID                 = 3d235c82
-Eval ID            = 04164728
-Name               = scdf.scdf[0]
-Node ID            = 2dd82384
-Job ID             = scdf
-Client Status      = running
-Client Description = <none>
-Created At         = 12/13/16s 09:15:20 UTC
+vagrant@hashistack:~$ nomad alloc-status 63c64eaf
+ID                  = 63c64eaf
+Eval ID             = 491168de
+Name                = scdf.scdf[0]
+Node ID             = 774539c7
+Job ID              = scdf
+Client Status       = running
+Client Description  = <none>
+Desired Status      = run
+Desired Description = <none>
+Created At          = 08/01/17 20:58:44 UTC
 
 Task "kafka" is "running"
 Task Resources
-CPU         Memory           Disk  IOPS  Addresses
-13/500 MHz  506 MiB/512 MiB  0 B   0     kafka: 10.0.2.15:9092
+CPU         Memory           Disk     IOPS  Addresses
+25/500 MHz  507 MiB/512 MiB  500 MiB  0     kafka: 172.16.0.2:9092
 
 Recent Events:
 Time                   Type        Description
-12/13/16 09:15:47 UTC  Started     Task started by client
-12/13/16 09:15:36 UTC  Restarting  Task restarting in 10.338625681s
-12/13/16 09:15:36 UTC  Terminated  Exit Code: 1, Exit Message: "Docker container exited with non-zero exit code: 1"
-12/13/16 09:15:35 UTC  Started     Task started by client
-12/13/16 09:15:24 UTC  Restarting  Task restarting in 10.118221449s
-12/13/16 09:15:24 UTC  Terminated  Exit Code: 1, Exit Message: "Docker container exited with non-zero exit code: 1"
-12/13/16 09:15:22 UTC  Started     Task started by client
-12/13/16 09:15:20 UTC  Received    Task received by client
+08/01/17 21:02:16 UTC  Started     Task started by client
+08/01/17 21:01:59 UTC  Restarting  Task restarting in 16.424762972s
+08/01/17 21:01:59 UTC  Terminated  Exit Code: 1, Exit Message: "Docker container exited with non-zero exit code: 1"
+08/01/17 21:01:58 UTC  Started     Task started by client
+08/01/17 21:01:40 UTC  Restarting  Task restarting in 16.967973166s
+08/01/17 21:01:40 UTC  Terminated  Exit Code: 1, Exit Message: "Docker container exited with non-zero exit code: 1"
+08/01/17 21:01:38 UTC  Started     Task started by client
+08/01/17 20:58:44 UTC  Driver      Downloading image wurstmeister/kafka:0.10.1.0
+08/01/17 20:58:44 UTC  Task Setup  Building Task Directory
+08/01/17 20:58:44 UTC  Received    Task received by client
 
 Task "mysql" is "running"
 Task Resources
-CPU        Memory           Disk  IOPS  Addresses
-2/500 MHz  115 MiB/128 MiB  0 B   0     db: 10.0.2.15:3306
-
-Recent Events:
-Time                   Type      Description
-12/13/16 09:15:22 UTC  Started   Task started by client
-12/13/16 09:15:20 UTC  Received  Task received by client
-
-Task "redis" is "running"
-Task Resources
-CPU        Memory          Disk  IOPS  Addresses
-2/256 MHz  6.2 MiB/64 MiB  0 B   0     redis: 10.0.2.15:6379
-
-Recent Events:
-Time                   Type      Description
-12/13/16 09:15:22 UTC  Started   Task started by client
-12/13/16 09:15:20 UTC  Received  Task received by client
-
-Task "scdf-server" is "running"
-Task Resources
-CPU        Memory           Disk  IOPS  Addresses
-3/500 MHz  304 MiB/384 MiB  0 B   0     http: 10.0.2.15:9393
+CPU        Memory           Disk     IOPS  Addresses
+2/500 MHz  117 MiB/128 MiB  500 MiB  0     db: 172.16.0.2:3306
 
 Recent Events:
 Time                   Type        Description
-12/13/16 09:15:42 UTC  Started     Task started by client
-...
+08/01/17 21:00:50 UTC  Started     Task started by client
+08/01/17 20:58:44 UTC  Driver      Downloading image mysql:5.6
+08/01/17 20:58:44 UTC  Task Setup  Building Task Directory
+08/01/17 20:58:44 UTC  Received    Task received by client
+
+Task "redis" is "running"
+Task Resources
+CPU        Memory          Disk     IOPS  Addresses
+3/256 MHz  6.2 MiB/64 MiB  500 MiB  0     redis: 172.16.0.2:6379
+
+Recent Events:
+Time                   Type        Description
+08/01/17 20:58:57 UTC  Started     Task started by client
+08/01/17 20:58:44 UTC  Driver      Downloading image redis:3-alpine
+08/01/17 20:58:44 UTC  Task Setup  Building Task Directory
+08/01/17 20:58:44 UTC  Received    Task received by client
+
+Task "scdf-metrics-collector" is "running"
+Task Resources
+CPU          Memory           Disk     IOPS  Addresses
+518/500 MHz  507 MiB/512 MiB  500 MiB  0     http: 172.16.0.2:8080
+
+Recent Events:
+Time                   Type        Description
+08/01/17 21:02:10 UTC  Started     Task started by client
+08/01/17 21:01:54 UTC  Restarting  Task restarting in 15.187972956s
+08/01/17 21:01:54 UTC  Terminated  Exit Code: 1, Exit Message: "Docker container exited with non-zero exit code: 1"
+08/01/17 21:01:34 UTC  Started     Task started by client
+08/01/17 21:01:17 UTC  Restarting  Task restarting in 16.424762972s
+08/01/17 21:01:17 UTC  Terminated  Exit Code: 1, Exit Message: "Docker container exited with non-zero exit code: 1"
+08/01/17 21:00:57 UTC  Started     Task started by client
+08/01/17 21:00:39 UTC  Restarting  Task restarting in 16.967973166s
+08/01/17 21:00:39 UTC  Terminated  Exit Code: 1, Exit Message: "Docker container exited with non-zero exit code: 1"
+08/01/17 21:00:16 UTC  Started     Task started by client
+
+Task "scdf-server" is "running"
+Task Resources
+CPU        Memory           Disk     IOPS  Addresses
+5/500 MHz  323 MiB/384 MiB  500 MiB  0     http: 172.16.0.2:9393
+
+Recent Events:
+Time                   Type            Description
+08/01/17 21:11:26 UTC  Started         Task started by client
+08/01/17 21:11:08 UTC  Restarting      Task restarting in 17.905628447s
+08/01/17 21:11:08 UTC  Terminated      Exit Code: 137, Exit Message: "Docker container exited with non-zero exit code: 137"
+08/01/17 21:05:27 UTC  Started         Task started by client
+08/01/17 21:05:09 UTC  Restarting      Task restarting in 18.119676483s
+08/01/17 21:05:09 UTC  Driver Failure  failed to initialize task "scdf-server" for alloc "63c64eaf-5a43-3e18-8e55-0134f8c18f93": Failed to pull `donovanmuller/spring-cloud-dataflow-server-nomad:1.2.3.RELEASE`: API error (404): {"message":"manifest for donovanmuller/spring-cloud-dataflow-server-nomad:1.2.3.RELEASE not found"}
+08/01/17 21:05:05 UTC  Driver          Downloading image donovanmuller/spring-cloud-dataflow-server-nomad:1.2.3.RELEASE
+08/01/17 21:04:47 UTC  Restarting      Task restarting in 17.088216893s
+08/01/17 21:04:47 UTC  Driver Failure  failed to initialize task "scdf-server" for alloc "63c64eaf-5a43-3e18-8e55-0134f8c18f93": Failed to pull `donovanmuller/spring-cloud-dataflow-server-nomad:1.2.3.RELEASE`: API error (404): {"message":"manifest for donovanmuller/spring-cloud-dataflow-server-nomad:1.2.3.RELEASE not found"}
+08/01/17 21:04:42 UTC  Driver          Downloading image donovanmuller/spring-cloud-dataflow-server-nomad:1.2.3.RELEASE
 
 Task "zookeeper" is "running"
 Task Resources
-CPU        Memory          Disk  IOPS  Addresses
-3/500 MHz  84 MiB/128 MiB  0 B   0     zookeeper: 10.0.2.15:2181
-                                       follower: 10.0.2.15:2888
-                                       leader: 10.0.2.15:3888
+CPU        Memory          Disk     IOPS  Addresses
+2/500 MHz  45 MiB/128 MiB  500 MiB  0     zookeeper: 172.16.0.2:2181
+                                          follower: 172.16.0.2:2888
+                                          leader: 172.16.0.2:3888
+
+Recent Events:
+Time                   Type        Description
+08/01/17 21:02:12 UTC  Started     Task started by client
+08/01/17 20:58:44 UTC  Driver      Downloading image digitalwonderland/zookeeper:latest
+08/01/17 20:58:44 UTC  Task Setup  Building Task Directory
+08/01/17 20:58:44 UTC  Received    Task received by client
 
 ...
 ----
 
 or alternatively check the health status of all services using the Consul UI:
 
-image::{scdf-server-nomad-asciidoc}/images/scdf-nomad-up.png[Data Flow Server and components up]
+image::{scdf-server-nomad-asciidoc}/images/scdf-nomad-up.jpg[Data Flow Server and components up]
 
 [NOTE]
 ====
@@ -182,7 +223,10 @@ Download and run the Shell, targeting the Data Flow Server exposed via a Fabio r
 [source,console]
 ----
 $ wget http://repo.spring.io/{dataflow-version-type-lowercase}/org/springframework/cloud/spring-cloud-dataflow-shell/{dataflow-project-version}/spring-cloud-dataflow-shell-{dataflow-project-version}.jar
-$ java -jar spring-cloud-dataflow-shell-{dataflow-project-version}.jar --dataflow.uri=http://scdf-server.hashistack.vagrant/
+$ java -jar spring-cloud-dataflow-shell-{dataflow-project-version}.jar \
+  --dataflow.uri=http://scdf-server.hashistack.vagrant/ \
+  --dataflow.username=user \
+  --dataflow.password=password
 
   ____                              ____ _                __
  / ___| _ __  _ __(_)_ __   __ _   / ___| | ___  _   _  __| |
@@ -201,6 +245,21 @@ Welcome to the Spring Cloud Data Flow shell. For assistance hit TAB or type "hel
 dataflow:>
 ----
 
+[NOTE]
+====
+Security is enabled by default. See the link:http://docs.spring.io/spring-cloud-dataflow/docs/1.2.3.RELEASE/reference/htmlsingle/#configuration-security-single-user-authentication[Security configuration section] for more information.
+There are two default users created:
+
+[cols=2*,options="header"]
+|===
+|Username
+|Password
+
+|user | password
+|admin | admin
+|===
+====
+
 === Registering Stream applications with Docker resource
 
 Now register all out-of-the-box stream applications using the Docker resource type, built with the Kafka binder in bulk with the following command.
@@ -209,7 +268,7 @@ TIP: For more details, review how to link:http://docs.spring.io/spring-cloud-dat
 
 [source,console]
 ----
-dataflow:>app import --uri http://bit.ly/stream-applications-kafka-docker
+dataflow:>app import --uri http://bit.ly/Bacon-RELEASE-stream-applications-kafka-10-docker
 Successfully registered applications: [source.tcp, sink.jdbc, source.http, sink.rabbit, source.rabbit, source.ftp, sink.gpfdist, processor.transform, source.loggregator, source.sftp, processor.filter, sink.cassandra, processor.groovy-filter, sink.router, source.trigger, sink.hdfs-dataset, processor.splitter, source.load-generator, processor.tcp-client, source.time, source.gemfire, source.twitterstream, sink.tcp, source.jdbc, sink.field-value-counter, sink.redis-pubsub, sink.hdfs, processor.bridge, processor.pmml, processor.httpclient, source.s3, sink.ftp, sink.log, sink.gemfire, sink.aggregate-counter, sink.throughput, source.triggertask, sink.s3, source.gemfire-cq, source.jms, source.tcp-client, processor.scriptable-transform, sink.counter, sink.websocket, source.mongodb, source.mail, processor.groovy-transform, source.syslog]
 ----
 
@@ -226,7 +285,7 @@ Deployment request has been sent
 
 Verify the deployed apps using the by checking the status of the apps using the Shell:
 
-image::{scdf-server-nomad-asciidoc}/images/scdf-nomad-stream-deployed.png[ticktock streamd deployed]
+image::{scdf-server-nomad-asciidoc}/images/scdf-nomad-stream-deployed.jpg[ticktock streamd deployed]
 
 To verify that the stream is working as expected, tail the logs of the `ticktock-log` using `nomad`:
 
@@ -234,13 +293,13 @@ To verify that the stream is working as expected, tail the logs of the `ticktock
 ----
 vagrant@hashistack:~$ nomad logs 71f7aba1
 ...
-...  INFO 1 --- [afka-listener-1] log-sink                                 : 11/29/16 14:49:59
-...  INFO 1 --- [afka-listener-1] log-sink                                 : 11/29/16 14:50:01
-...  INFO 1 --- [afka-listener-1] log-sink                                 : 11/29/16 14:50:02
-...  INFO 1 --- [afka-listener-1] log-sink                                 : 11/29/16 14:50:03
-...  INFO 1 --- [afka-listener-1] log-sink                                 : 11/29/16 14:50:04
-...  INFO 1 --- [afka-listener-1] log-sink                                 : 11/29/16 14:50:05
-...  INFO 1 --- [afka-listener-1] log-sink                                 : 11/29/16 14:50:06
+...  INFO 1 --- [afka-listener-1] log-sink                                 : 02/08/17 14:49:59
+...  INFO 1 --- [afka-listener-1] log-sink                                 : 02/08/17 14:50:01
+...  INFO 1 --- [afka-listener-1] log-sink                                 : 02/08/17 14:50:02
+...  INFO 1 --- [afka-listener-1] log-sink                                 : 02/08/17 14:50:03
+...  INFO 1 --- [afka-listener-1] log-sink                                 : 02/08/17 14:50:04
+...  INFO 1 --- [afka-listener-1] log-sink                                 : 02/08/17 14:50:05
+...  INFO 1 --- [afka-listener-1] log-sink                                 : 02/08/17 14:50:06
 ...
 ----
 
@@ -285,10 +344,10 @@ To verify that the stream is working as expected, tail the logs of the `ticktock
 ----
 $ nomad logs -f 3f474cc7
 ...
-...  INFO 1 --- [afka-listener-1] log-sink                                 : 11/29/16 18:34:23
-...  INFO 1 --- [afka-listener-1] log-sink                                 : 11/29/16 18:34:25
-...  INFO 1 --- [afka-listener-1] log-sink                                 : 11/29/16 18:34:26
-...  INFO 1 --- [afka-listener-1] log-sink                                 : 11/29/16 18:34:27
+...  INFO 1 --- [afka-listener-1] log-sink                                 : 02/08/17 18:34:23
+...  INFO 1 --- [afka-listener-1] log-sink                                 : 02/08/17 18:34:25
+...  INFO 1 --- [afka-listener-1] log-sink                                 : 02/08/17 18:34:26
+...  INFO 1 --- [afka-listener-1] log-sink                                 : 02/08/17 18:34:27
 ----
 
 == Deploying Tasks on Nomad
@@ -303,7 +362,7 @@ Import all Maven task applications with the following command:
 
 [source,console]
 ----
-dataflow:>app import --uri http://bit.ly/1-0-1-GA-task-applications-maven
+dataflow:>app import --uri http://bit.ly/Belmont-GA-task-applications-maven
 ----
 
 === Launch a simple task in the shell
@@ -324,14 +383,14 @@ dataflow:>task list
 ╔═════════╤═══════════════╤═══════════╗
 ║Task Name│Task Definition│Task Status║
 ╠═════════╪═══════════════╪═══════════╣
-║task1    │timestamp      │complete   ║
+║task1    │timestamp      │unknown    ║
 ╚═════════╧═══════════════╧═══════════╝
 
 dataflow:>task execution list
 ╔═════════╤══╤═════════════════════════════╤═════════════════════════════╤═════════╗
 ║Task Name│ID│         Start Time          │          End Time           │Exit Code║
 ╠═════════╪══╪═════════════════════════════╪═════════════════════════════╪═════════╣
-║task1    │1 │Tue Dec 13 15:34:01 SAST 2016│Tue Dec 13 15:34:01 SAST 2016│0        ║
+║task1    │1 │Wed Aug 02 15:34:01 SAST 2017│Wed Aug 02 15:34:01 SAST 2017│0        ║
 ╚═════════╧══╧═════════════════════════════╧═════════════════════════════╧═════════╝
 ----
 

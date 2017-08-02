@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.cloud</groupId>
 		<artifactId>spring-cloud-dataflow-parent</artifactId>
-		<version>1.2.2.RELEASE</version>
+		<version>1.2.3.RELEASE</version>
 		<relativePath />
 	</parent>
 
@@ -31,8 +31,8 @@
 	</modules>
 
 	<properties>
-		<spring-cloud-dataflow.version>1.2.2.RELEASE</spring-cloud-dataflow.version>
-		<spring-cloud-deployer-nomad.version>1.2.1.RELEASE</spring-cloud-deployer-nomad.version>
+		<spring-cloud-dataflow.version>1.2.3.RELEASE</spring-cloud-dataflow.version>
+		<spring-cloud-deployer-nomad.version>1.2.3.RELEASE</spring-cloud-deployer-nomad.version>
 
 		<!-- naughty, will fix later -->
 		<checkstyle.skip>true</checkstyle.skip>

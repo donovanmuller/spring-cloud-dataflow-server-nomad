@@ -19,7 +19,7 @@ job "scdf" {
 		task "scdf-server" {
 			driver = "docker"
 			config {
-				image = "donovanmuller/spring-cloud-dataflow-server-nomad:1.1.0.RELEASE"
+				image = "donovanmuller/spring-cloud-dataflow-server-nomad:1.2.3.RELEASE"
 				# use persistent volume for local Maven repository, saves having to download app artifacts
 				# after a new container start
 				volumes = [
@@ -46,7 +46,8 @@ job "scdf" {
 			}
 
 			env {
-				JAVA_OPTS = "-Xmx256m" # see spring-cloud-dataflow-server-nomad/pom.xml:84
+				JAVA_OPTS = "-Xmx256m" # see spring-cloud-dataflow-server-nomad/pom.xml:88
+				SPRING_APPLICATION_JSON = "{ \"spring.cloud.dataflow.application-properties.stream.spring.cloud.stream.bindings.applicationMetrics.destination\": \"metrics\" }"
 				spring.cloud.config.server.bootstrap = "false"
 				health.config.enabled = "false"
 				spring.datasource.url = "jdbc:mysql://mysql.service.consul:3306/scdf"
@@ -61,10 +62,21 @@ job "scdf" {
 				maven.remote-repositories.spring.url = "http://repo.spring.io/libs-snapshot"
 				spring.cloud.deployer.nomad.region = "vagrant" # the Nomad region where apps will be deployed
 				spring.cloud.deployer.nomad.nomadHost = "nomad-client.service.consul"
-				spring.cloud.deployer.nomad.deployerHost = "${NOMAD_IP_http}" # used for apps defined with Maven resource URIs
+				spring.cloud.deployer.nomad.deployerHost = "${NOMAD_IP_http}"
+				spring.cloud.deployer.nomad.deployerUsername = "user"
+				spring.cloud.deployer.nomad.deployerPassword = "password" # used for apps defined with Maven resource URIs
 				spring.cloud.consul.host = "consul.service.consul" # so we can use Consul for app status checks
 				spring.cloud.deployer.nomad.javaOpts = "-Xms64m,-Xmx256m" # default JVM options for all apps deployed via Maven
 				spring.cloud.deployer.nomad.resources.memory = "768" # adjust appropriately to your environment
+				security.basic.enabled = true
+				security.basic.realm = "Spring Cloud Data Flow"
+				spring.cloud.dataflow.security.authentication.file.enabled = true
+				spring.cloud.dataflow.security.authentication.file.users.admin = "admin, ROLE_MANAGE, ROLE_VIEW"
+				spring.cloud.dataflow.security.authentication.file.users.user = "password, ROLE_VIEW, ROLE_CREATE"
+				spring.cloud.dataflow.features.analytics.enabled = true
+				spring.cloud.dataflow.metrics.collector.uri = "http://scdf-metrics-collector.service.consul:8080"
+				spring.cloud.dataflow.metrics.collector.username = "scdf"
+				spring.cloud.dataflow.metrics.collector.password = "scdf"
 			}
 
 			resources {
@@ -74,6 +86,50 @@ job "scdf" {
 					mbits = 10
 					port "http" {
 						static = 9393
+					}
+				}
+			}
+		}
+
+		task "scdf-metrics-collector" {
+			driver = "docker"
+			config {
+				image = "springcloud/metrics-collector-kafka-10:1.0.0.RELEASE"
+				port_map {
+					http = 8080
+				}
+			}
+
+			service {
+				name = "scdf-metrics-collector"
+				# adjust this value (scdf-metrics-collector.hashistack.vagrant) to a resolvable host if applicable
+				tags = ["urlprefix-scdf-metrics-collector.hashistack.vagrant/"]
+				port = "http"
+				check {
+					name = "Data Flow Metrics Collector HTTP Check"
+					type = "http"
+					interval = "10s"
+					timeout = "2s"
+					path = "/health"
+					protocol = "http"
+				}
+			}
+
+			env {
+				JAVA_OPTS = "-Xmx256m"
+				security.user.name= "scdf"
+				security.user.password= "scdf"
+				spring.cloud.stream.kafka.binder.brokers= "kafka-broker.service.consul:9092"
+				spring.cloud.stream.kafka.binder.zkNodes = "kafka-zk.service.consul:2181"
+			}
+
+			resources {
+				cpu = 500
+				memory = 512
+				network {
+					mbits = 10
+					port "http" {
+						static = 8080
 					}
 				}
 			}
@@ -92,7 +148,7 @@ job "scdf" {
 				name = "mysql"
 				port = "db"
 				check {
-					name = "Postgres TCP Check"
+					name = "MySQL TCP Check"
 					type = "tcp"
 					interval = "10s"
 					timeout = "2s"

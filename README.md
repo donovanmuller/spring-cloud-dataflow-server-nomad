@@ -16,5 +16,5 @@ $ ./mvnw clean install
 To build the docker image for the Data Flow Server
 
 ```bash
-$ ./mvnw package docker:build -pl :spring-cloud-dataflow-server-nomad
+$ ./mvnw package docker:build -pl spring-cloud-dataflow-server-nomad
 ```
