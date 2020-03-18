@@ -1,3 +1,5 @@
+> ⚠️ **This project is no longer maintained.**
+
 # Spring Cloud Data Flow Server Nomad [![Build Status](https://travis-ci.org/donovanmuller/spring-cloud-dataflow-server-nomad.svg?branch=master)](https://travis-ci.org/donovanmuller/spring-cloud-dataflow-server-nomad)
 
 This project provides support for deploying Spring Cloud Dataflow's streaming and task/batch data pipelines to [Hashicorp Nomad](https://www.nomadproject.io). 
